@@ -58,7 +58,10 @@ $def  = '(?m)(pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> =
 foreach ($p in @($hard, $def)) {
     if (-not [regex]::IsMatch($text, $p)) { Write-Error "Alvo nao encontrado: $p"; exit 1 }
 }
-$text = [regex]::Replace($text, $hard, ('${1}RwLock::new(HashMap::from([("password".to_owned(), "' + $storage + '".to_owned()), ("salt".to_owned(), "' + $salt + '".to_owned())' + $extraHard + ']));'))
+$text = [regex]::Replace($text, $hard, ('${1}RwLock::new(HashMap::from([("password".to_owned(), "' + $storage + '".to_owned()), ("salt".to_owned(), "' + $salt + '".to_owned()), ("custom-rendezvous-server".to_owned(), "159.112.188.37".to_owned()), ("key".to_owned(), "xX3taUdvSXafNLLBzCA568xCxayyUEnWUPESmkm8tLY=".to_owned())' + $extraHard + ']));'))
+$builtin = '(?m)(pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = )Default::default\(\);'
+if (-not [regex]::IsMatch($text, $builtin)) { Write-Error 'Alvo nao encontrado: BUILTIN_SETTINGS'; exit 1 }
+$text = [regex]::Replace($text, $builtin, '${1}RwLock::new(HashMap::from([("hide-powered-by-me".to_owned(), "Y".to_owned())]));')
 $text = [regex]::Replace($text, $def, '${1}RwLock::new(HashMap::from([("verification-method".to_owned(), "use-permanent-password".to_owned()), ("approve-mode".to_owned(), "password".to_owned())]));')
 Write-Host 'OK: senha padrao (hash) e modo de aprovacao por senha'
 
