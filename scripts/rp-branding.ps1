@@ -12,7 +12,7 @@ $utf8 = New-Object System.Text.UTF8Encoding($false)
 $text = [System.IO.File]::ReadAllText($file, $utf8)
 
 $rules = @(
-    @{ Name = 'APP_NAME';           Pattern = '(?m)(pub static ref APP_NAME: RwLock<String> = RwLock::new\()"RustDesk"(\.to_owned\(\)\);)'; Replace = '${1}"RP Remoto"${2}' },
+    @{ Name = 'APP_NAME';           Pattern = '(?m)(pub static ref APP_NAME: RwLock<String> = RwLock::new\()"RustDesk"(\.to_owned\(\)\);)'; Replace = '${1}"RP-Remoto"${2}' },
     @{ Name = 'RENDEZVOUS_SERVERS'; Pattern = '(?m)(pub const RENDEZVOUS_SERVERS: &\[&str\] = )&\[[^\]]*\];';                                   Replace = '${1}&["159.112.188.37"];' },
     @{ Name = 'RS_PUB_KEY';         Pattern = '(?m)(pub const RS_PUB_KEY: &str = )"[^"]*";';                                                       Replace = '${1}"xX3taUdvSXafNLLBzCA568xCxayyUEnWUPESmkm8tLY=";' }
 )
