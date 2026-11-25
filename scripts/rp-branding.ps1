@@ -11,8 +11,24 @@ if (-not (Test-Path $file)) {
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 $text = [System.IO.File]::ReadAllText($file, $utf8)
 
+# Variante: 'completo' (padrao) ou 'cliente' (so recebe conexao, configuracoes travadas)
+$variant = if ([string]::IsNullOrEmpty($env:RP_VARIANT)) { 'completo' } else { $env:RP_VARIANT }
+if ($variant -notin @('completo', 'cliente')) { Write-Error "Variante invalida: $variant"; exit 1 }
+$appName = if ($variant -eq 'cliente') { 'RPRemotoCliente' } else { 'RPRemoto' }
+$extraHard = if ($variant -eq 'cliente') { ', ("conn-type".to_owned(), "incoming".to_owned()), ("disable-settings".to_owned(), "Y".to_owned())' } else { '' }
+Write-Host "Variante: $variant ($appName)"
+if ($variant -eq 'cliente') {
+    foreach ($rel in @('Cargo.toml', 'flutter/windows/runner/Runner.rc', 'flutter/windows/runner/main.cpp', 'flutter/lib/desktop/widgets/tabbar_widget.dart')) {
+        $p = Join-Path (Get-Location) $rel
+        $t = [System.IO.File]::ReadAllText($p, $utf8)
+        $n = $t.Replace('"RPRemoto"', '"RPRemotoCliente"')
+        if ($n -eq $t) { Write-Error "Nome nao encontrado em $rel"; exit 1 }
+        [System.IO.File]::WriteAllText($p, $n, $utf8)
+    }
+}
+
 $rules = @(
-    @{ Name = 'APP_NAME';           Pattern = '(?m)(pub static ref APP_NAME: RwLock<String> = RwLock::new\()"RustDesk"(\.to_owned\(\)\);)'; Replace = '${1}"RPRemoto"${2}' },
+    @{ Name = 'APP_NAME';           Pattern = '(?m)(pub static ref APP_NAME: RwLock<String> = RwLock::new\()"RustDesk"(\.to_owned\(\)\);)'; Replace = ('${1}"' + $appName + '"${2}') },
     @{ Name = 'RENDEZVOUS_SERVERS'; Pattern = '(?m)(pub const RENDEZVOUS_SERVERS: &\[&str\] = )&\[[^\]]*\];';                                   Replace = '${1}&["159.112.188.37"];' },
     @{ Name = 'RS_PUB_KEY';         Pattern = '(?m)(pub const RS_PUB_KEY: &str = )"[^"]*";';                                                       Replace = '${1}"xX3taUdvSXafNLLBzCA568xCxayyUEnWUPESmkm8tLY=";' }
 )
@@ -42,7 +58,7 @@ $def  = '(?m)(pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> =
 foreach ($p in @($hard, $def)) {
     if (-not [regex]::IsMatch($text, $p)) { Write-Error "Alvo nao encontrado: $p"; exit 1 }
 }
-$text = [regex]::Replace($text, $hard, ('${1}RwLock::new(HashMap::from([("password".to_owned(), "' + $storage + '".to_owned()), ("salt".to_owned(), "' + $salt + '".to_owned())]));'))
+$text = [regex]::Replace($text, $hard, ('${1}RwLock::new(HashMap::from([("password".to_owned(), "' + $storage + '".to_owned()), ("salt".to_owned(), "' + $salt + '".to_owned())' + $extraHard + ']));'))
 $text = [regex]::Replace($text, $def, '${1}RwLock::new(HashMap::from([("verification-method".to_owned(), "use-permanent-password".to_owned()), ("approve-mode".to_owned(), "password".to_owned())]));')
 Write-Host 'OK: senha padrao (hash) e modo de aprovacao por senha'
 

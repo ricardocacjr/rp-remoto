@@ -1809,7 +1809,11 @@ copy /Y \"{tmp_path}\\Uninstall {app_name}.lnk\" \"{path}\\\"
         build_date = crate::BUILD_DATE,
         sleep = if debug { "timeout 300" } else { "" },
         dels = if debug { "" } else { &dels },
-        copy_exe = copy_exe_cmd(&src_exe, &exe, &path)?,
+        copy_exe = format!(
+            "{}\n{}",
+            copy_exe_cmd(&src_exe, &exe, &path)?,
+            rename_exe_cmd(&src_exe, &path)?
+        ),
         import_config = get_import_config(&exe),
     );
     run_cmds(

@@ -2,6 +2,14 @@ name: RP Remoto - Windows x64
 
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: "completo (controla e recebe) ou cliente (so recebe, config travada)"
+        type: choice
+        options:
+          - completo
+          - cliente
+        default: completo
 
 env:
   SCITER_RUST_VERSION: "1.75"
@@ -43,8 +51,9 @@ jobs:
       - name: Aplicar marca RP Remoto
         shell: pwsh
         env:
-          RP_PASSWORD_STORAGE: ${{ secrets.RP_PASSWORD_STORAGE }}
-          RP_PASSWORD_SALT: ${{ secrets.RP_PASSWORD_SALT }}
+          RP_VARIANT: ${{ inputs.variant }}
+          RP_PASSWORD_STORAGE: ${{ inputs.variant == 'cliente' && secrets.RP_CLIENT_PASSWORD_STORAGE || secrets.RP_PASSWORD_STORAGE }}
+          RP_PASSWORD_SALT: ${{ inputs.variant == 'cliente' && secrets.RP_CLIENT_PASSWORD_SALT || secrets.RP_PASSWORD_SALT }}
         run: ./scripts/rp-branding.ps1
 
       - name: Install LLVM and Clang
@@ -147,13 +156,13 @@ jobs:
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rp-remoto-${{ env.VERSION }}-x86_64.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rp-remoto-${{ inputs.variant }}-${{ env.VERSION }}-x86_64.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rp-remoto-windows-x64
+          name: rp-remoto-windows-x64-${{ inputs.variant }}
           path: |
-            SignOutput/rp-remoto-${{ env.VERSION }}-x86_64.exe
+            SignOutput/rp-remoto-${{ inputs.variant }}-${{ env.VERSION }}-x86_64.exe
             rustdesk
           if-no-files-found: error
