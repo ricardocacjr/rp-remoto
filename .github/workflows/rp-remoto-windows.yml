@@ -52,8 +52,12 @@ jobs:
         shell: pwsh
         env:
           RP_VARIANT: ${{ inputs.variant }}
-          RP_PASSWORD_STORAGE: ${{ inputs.variant == 'cliente' && secrets.RP_CLIENT_PASSWORD_STORAGE || secrets.RP_PASSWORD_STORAGE }}
-          RP_PASSWORD_SALT: ${{ inputs.variant == 'cliente' && secrets.RP_CLIENT_PASSWORD_SALT || secrets.RP_PASSWORD_SALT }}
+          # Mesma senha para completo e cliente (decisao do Ricardo, 2026-11-25):
+          # antes havia pares separados (RP_PASSWORD_* e RP_CLIENT_PASSWORD_*) que
+          # podiam ficar diferentes, travando o acesso remoto. Agora os dois builds
+          # sempre usam o mesmo par de secrets.
+          RP_PASSWORD_STORAGE: ${{ secrets.RP_PASSWORD_STORAGE }}
+          RP_PASSWORD_SALT: ${{ secrets.RP_PASSWORD_SALT }}
         run: ./scripts/rp-branding.ps1
 
       - name: Install LLVM and Clang
