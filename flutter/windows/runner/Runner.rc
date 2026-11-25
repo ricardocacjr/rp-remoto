@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "RP Solution" "\0"
-            VALUE "FileDescription", "RP Remoto" "\0"
+            VALUE "FileDescription", "RPRemoto" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "rustdesk" "\0"
             VALUE "LegalCopyright", "Copyright © 2026 RP Solution. All rights reserved." "\0"
             VALUE "OriginalFilename", "rustdesk.exe" "\0"
-            VALUE "ProductName", "RP Remoto" "\0"
+            VALUE "ProductName", "RPRemoto" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
