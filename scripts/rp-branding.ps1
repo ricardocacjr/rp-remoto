@@ -16,6 +16,8 @@ $variant = if ([string]::IsNullOrEmpty($env:RP_VARIANT)) { 'completo' } else { $
 if ($variant -notin @('completo', 'cliente')) { Write-Error "Variante invalida: $variant"; exit 1 }
 $appName = if ($variant -eq 'cliente') { 'RPRemotoCliente' } else { 'RPRemoto' }
 $extraHard = if ($variant -eq 'cliente') { ', ("conn-type".to_owned(), "incoming".to_owned()), ("disable-settings".to_owned(), "Y".to_owned())' } else { '' }
+# Cliente: so entra com clique em Aceitar. Completo: por senha.
+$approve = if ($variant -eq 'cliente') { 'click' } else { 'password' }
 Write-Host "Variante: $variant ($appName)"
 if ($variant -eq 'cliente') {
     foreach ($rel in @('Cargo.toml', 'flutter/windows/runner/Runner.rc', 'flutter/windows/runner/main.cpp', 'flutter/lib/desktop/widgets/tabbar_widget.dart')) {
@@ -62,8 +64,8 @@ $text = [regex]::Replace($text, $hard, ('${1}RwLock::new(HashMap::from([("passwo
 $builtin = '(?m)(pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = )Default::default\(\);'
 if (-not [regex]::IsMatch($text, $builtin)) { Write-Error 'Alvo nao encontrado: BUILTIN_SETTINGS'; exit 1 }
 $text = [regex]::Replace($text, $builtin, '${1}RwLock::new(HashMap::from([("hide-powered-by-me".to_owned(), "Y".to_owned())]));')
-$text = [regex]::Replace($text, $def, '${1}RwLock::new(HashMap::from([("verification-method".to_owned(), "use-permanent-password".to_owned()), ("approve-mode".to_owned(), "password".to_owned())]));')
-Write-Host 'OK: senha padrao (hash) e modo de aprovacao por senha'
+$text = [regex]::Replace($text, $def, '${1}RwLock::new(HashMap::from([("verification-method".to_owned(), "use-permanent-password".to_owned()), ("approve-mode".to_owned(), "' + $approve + '".to_owned())]));')
+Write-Host "OK: senha padrao (hash) e modo de aprovacao: $approve"
 
 [System.IO.File]::WriteAllText($file, $text, $utf8)
 Write-Host 'Marca RP Remoto aplicada em libs/hbb_common/src/config.rs'
